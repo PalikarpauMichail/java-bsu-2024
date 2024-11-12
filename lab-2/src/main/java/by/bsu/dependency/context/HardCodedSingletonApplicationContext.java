@@ -8,10 +8,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import by.bsu.dependency.annotation.Bean;
+import by.bsu.dependency.exception.ApplicationContextNotStartedException;
+import by.bsu.dependency.exception.NoSuchBeanDefinitionException;
 
 
 public class HardCodedSingletonApplicationContext extends AbstractApplicationContext {
 
+    ContextStatus status = ContextStatus.NOT_STARTED;
     private final Map<String, Class<?>> beanDefinitions;
     private final Map<String, Object> beans = new HashMap<>();
 
@@ -38,27 +41,32 @@ public class HardCodedSingletonApplicationContext extends AbstractApplicationCon
 
     @Override
     public void start() {
+        super.start();
         beanDefinitions.forEach((beanName, beanClass) -> beans.put(beanName, instantiateBean(beanClass)));
-    }
-
-    @Override
-    public boolean isRunning() {
-        throw new IllegalStateException("not implemented");
     }
 
     /**
      * В этой реализации отсутствуют проверки статуса контекста (запущен ли он).
      */
     @Override
-    public boolean containsBean(String name) {
-        return beans.containsKey(name);
+    public boolean containsBean(String name) throws ApplicationContextNotStartedException {
+        if (!isRunning()) {
+            throw new ApplicationContextNotStartedException("");
+        }
+        return beanDefinitions.containsKey(name);
     }
 
     /**
      * В этой реализации отсутствуют проверки статуса контекста (запущен ли он) и исключения в случае отсутствия бина
      */
     @Override
-    public Object getBean(String name) {
+    public Object getBean(String name) throws ApplicationContextNotStartedException {
+        if (!isRunning()) {
+            throw new ApplicationContextNotStartedException("");
+        }
+        if (!beans.containsKey(name)) {
+            throw new NoSuchBeanDefinitionException("");
+        }
         return beans.get(name);
     }
 
@@ -69,20 +77,17 @@ public class HardCodedSingletonApplicationContext extends AbstractApplicationCon
 
     @Override
     public boolean isPrototype(String name) {
+        if (!beanDefinitions.containsKey(name)) {
+            throw new NoSuchBeanDefinitionException("");
+        }
         return false;
     }
 
     @Override
     public boolean isSingleton(String name) {
-        return true;
-    }
-
-    private <T> T instantiateBean(Class<T> beanClass) {
-        try {
-            return beanClass.getConstructor().newInstance();
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException |
-                 InstantiationException e) {
-            throw new RuntimeException(e);
+        if (!beanDefinitions.containsKey(name)) {
+            throw new NoSuchBeanDefinitionException("");
         }
+        return true;
     }
 }
