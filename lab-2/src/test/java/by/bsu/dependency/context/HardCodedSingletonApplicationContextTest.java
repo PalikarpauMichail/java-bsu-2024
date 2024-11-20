@@ -1,7 +1,7 @@
 package by.bsu.dependency.context;
 
-import by.bsu.dependency.example.FirstBean;
-import by.bsu.dependency.example.OtherBean;
+import by.bsu.dependency.beans.testBeans.FirstBean;
+import by.bsu.dependency.beans.testBeans.OtherBean;
 import by.bsu.dependency.exception.ApplicationContextNotStartedException;
 import by.bsu.dependency.exception.NoSuchBeanDefinitionException;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class HardCodedSingletonApplicationContextTest {
 
-    private ApplicationContext applicationContext;
+    public ApplicationContext applicationContext;
 
     @BeforeEach
     void init() {

@@ -1,7 +1,6 @@
-package by.bsu.dependency.example;
+package by.bsu.dependency.beans.testBeans;
 
 public class ImplicitBean {
-
     void printSomething() {
         System.out.println("Hello, I'm bean without annotation");
     }

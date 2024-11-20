@@ -65,7 +65,7 @@
 `HardCodedSingletonApplicationContext`. Внедрение зависимостей тут отсутствует, но показан общий принцип использования
 контекста приложения (см. `Main.java`).
 
-Подробнее пример можно посмотреть в пакете `by.bsu.dependency.example`, содержимое представлено ниже:
+Подробнее пример можно посмотреть в пакете `by.bsu.dependency.basicExample`, содержимое представлено ниже:
 
 ```java
 // file FirstBean.java

@@ -1,4 +1,4 @@
-package by.bsu.dependency.example;
+package by.bsu.dependency.beans.testBeans;
 
 import by.bsu.dependency.annotation.Bean;
 import by.bsu.dependency.annotation.BeanScope;

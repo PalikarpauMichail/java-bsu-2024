@@ -1,8 +1,8 @@
 package by.bsu.dependency.context;
 
-import by.bsu.dependency.annotation.Bean;
 import by.bsu.dependency.annotation.BeanScope;
 import by.bsu.dependency.annotation.Inject;
+import by.bsu.dependency.annotation.PostConstruct;
 import by.bsu.dependency.exception.ApplicationContextNotStartedException;
 import by.bsu.dependency.exception.NoSuchBeanDefinitionException;
 
@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 public class SimpleApplicationContext extends AbstractApplicationContext {
 
-    private final Map<String, Class<?>> beanDefinitions;
     private Map<String, Object> singletonBeans = new HashMap<>();
 
     /**
@@ -34,7 +33,6 @@ public class SimpleApplicationContext extends AbstractApplicationContext {
                         Function.identity()
                 ));
     }
-
     /**
      * Помимо прочего, метод должен заниматься внедрением зависимостей в создаваемые объекты
      */
@@ -45,42 +43,79 @@ public class SimpleApplicationContext extends AbstractApplicationContext {
                 .filter((mapEntry) -> getBeanScope(mapEntry.getValue()) == BeanScope.SINGLETON)
                 .collect(Collectors.toMap(
                         Map.Entry<String, Class<?>>::getKey,
-                        (mapEntry) -> instantiateBean(mapEntry.getValue())
+                        (mapEntry) -> getBean(mapEntry.getValue())
                 ));
 
     }
 
     @Override
-    public boolean containsBean(String name) throws ApplicationContextNotStartedException {
-        if (!isRunning()) {
-            throw new ApplicationContextNotStartedException("");
-        }
-        return beanDefinitions.containsKey(name);
-    }
-
-    @Override
     public Object getBean(String name) {
+        if (!isRunning()) {
+            throw new ApplicationContextNotStartedException();
+        }
         if (!containsBean(name)) {
-            throw new NoSuchBeanDefinitionException("");
+            throw new NoSuchBeanDefinitionException();
         }
         return getBean(beanDefinitions.get(name));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> T getBean(Class<T> clazz) {
         if (!isRunning()) {
-            throw new ApplicationContextNotStartedException("");
+            throw new ApplicationContextNotStartedException();
+        }
+        if (!containsBean(getBeanName(clazz))) {
+            throw new NoSuchBeanDefinitionException();
         }
         if (singletonBeans.containsKey(this.getBeanName(clazz))) {
-            if (singletonBeans.get(this.getBeanName(clazz)) != null) {
-                return (T) singletonBeans.get(this.getBeanName(clazz));
-            } else {
-                throw new RuntimeException();
-            }
+            return clazz.cast(singletonBeans.get(this.getBeanName(clazz)));
         }
-        T bean = super.instantiateBean(clazz);
+        return instantiateBean(clazz);
+    }
 
+    @Override
+    public boolean isPrototype(String name) {
+        if (!beanDefinitions.containsKey(name)) {
+            throw new NoSuchBeanDefinitionException();
+        }
+        return this.getBeanScope(beanDefinitions.get(name)) == BeanScope.PROTOTYPE;
+    }
+
+    @Override
+    public boolean isSingleton(String name) {
+        if (!beanDefinitions.containsKey(name)) {
+            throw new NoSuchBeanDefinitionException();
+        }
+        return this.getBeanScope(beanDefinitions.get(name)) == BeanScope.SINGLETON;
+    }
+
+    @Override
+    protected <T> T instantiateBean(Class<T> clazz) {
+        T bean = super.instantiateBean(clazz);
+        if (getBeanScope(clazz) == BeanScope.SINGLETON) {
+            singletonBeans.put(getBeanName(clazz), bean);
+        }
+        injectDependencies(bean);
+        runPostConstructMethods(bean);
+        return bean;
+    }
+
+    private void runPostConstructMethods(Object bean) {
+        Arrays.stream(bean.getClass().getDeclaredMethods())
+                .filter(method -> method.isAnnotationPresent(PostConstruct.class))
+                .forEach(method -> {
+                    try {
+                        method.setAccessible(true);
+                        method.invoke(bean);
+                    } catch(IllegalAccessException | IllegalArgumentException |
+                            java. lang. reflect. InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    private void injectDependencies(Object bean) {
+        Class<?> clazz = bean.getClass();
         Arrays.stream(clazz.getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Inject.class))
                 .forEach(field -> {
@@ -91,38 +126,5 @@ public class SimpleApplicationContext extends AbstractApplicationContext {
                         throw new RuntimeException(e);
                     }
                 });
-        return bean;
     }
-
-    @Override
-    public boolean isPrototype(String name) {
-        if (!beanDefinitions.containsKey(name)) {
-            throw new NoSuchBeanDefinitionException("");
-        }
-        return this.getBeanScope(beanDefinitions.get(name)) == BeanScope.PROTOTYPE;
-    }
-
-    @Override
-    public boolean isSingleton(String name) {
-        if (!beanDefinitions.containsKey(name)) {
-            throw new NoSuchBeanDefinitionException("");
-        }
-        return this.getBeanScope(beanDefinitions.get(name)) == BeanScope.SINGLETON;
-    }
-
-    private String getBeanName(Class<?> clazz) {
-        if (clazz.getAnnotation(Bean.class) == null) {
-            return clazz.getSimpleName().substring(0, 1).toLowerCase()
-                    + clazz.getSimpleName().substring(1);
-        }
-        return clazz.getAnnotation(Bean.class).name();
-    }
-
-    private BeanScope getBeanScope(Class<?> clazz) {
-        if (clazz.getAnnotation(Bean.class) == null) {
-            return BeanScope.SINGLETON;
-        }
-        return clazz.getAnnotation(Bean.class).scope();
-    }
-
 }

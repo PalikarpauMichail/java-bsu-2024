@@ -1,4 +1,4 @@
-package by.bsu.dependency.example;
+package by.bsu.dependency.beans.testBeans;
 
 import by.bsu.dependency.annotation.Bean;
 import by.bsu.dependency.annotation.Inject;
@@ -9,11 +9,11 @@ public class OtherBean {
     @Inject
     private FirstBean firstBean;
 
-    void doSomething() {
+    public void doSomething() {
         System.out.println("Hi, I'm other bean");
     }
 
-    void doSomethingWithFirst() {
+    public void doSomethingWithFirst() {
         System.out.println("Trying to shake first bean...");
         firstBean.doSomething();
     }

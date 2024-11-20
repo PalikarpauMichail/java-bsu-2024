@@ -1,19 +1,18 @@
 package by.bsu.dependency.context;
 
-import by.bsu.dependency.example.*;
 import by.bsu.dependency.exception.ApplicationContextNotStartedException;
 import by.bsu.dependency.exception.NoSuchBeanDefinitionException;
+import by.bsu.dependency.beans.testBeans.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SimpleApplicationContextTest {
 
-    private ApplicationContext applicationContext;
+    public ApplicationContext applicationContext;
 
     @BeforeEach
     void init() {
@@ -157,13 +156,14 @@ public class SimpleApplicationContextTest {
 
     }
 
+
     @Test
-    void injectionCorrectness() {
+    void postConstructCorrectness() {
         applicationContext.start();
-        
-        Assertions.assertNull(
-                ((PrototypeHolderBean) applicationContext.getBean("prototypeHolderBean")).getNullString());
-        Assertions.assertNotNull(
-                ((PrototypeHolderBean) applicationContext.getBean("prototypeHolderBean")).getEmptyString());
+
+        Assertions.assertEquals(
+                ((PrototypeHolderBean) applicationContext.getBean("prototypeHolderBean")).getString(),
+                "Hello");
+
     }
 }

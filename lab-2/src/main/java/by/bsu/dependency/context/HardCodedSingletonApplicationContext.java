@@ -1,6 +1,5 @@
 package by.bsu.dependency.context;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +13,6 @@ import by.bsu.dependency.exception.NoSuchBeanDefinitionException;
 
 public class HardCodedSingletonApplicationContext extends AbstractApplicationContext {
 
-    ContextStatus status = ContextStatus.NOT_STARTED;
-    private final Map<String, Class<?>> beanDefinitions;
     private final Map<String, Object> beans = new HashMap<>();
 
     /**
@@ -51,7 +48,7 @@ public class HardCodedSingletonApplicationContext extends AbstractApplicationCon
     @Override
     public boolean containsBean(String name) throws ApplicationContextNotStartedException {
         if (!isRunning()) {
-            throw new ApplicationContextNotStartedException("");
+            throw new ApplicationContextNotStartedException();
         }
         return beanDefinitions.containsKey(name);
     }
@@ -62,10 +59,10 @@ public class HardCodedSingletonApplicationContext extends AbstractApplicationCon
     @Override
     public Object getBean(String name) throws ApplicationContextNotStartedException {
         if (!isRunning()) {
-            throw new ApplicationContextNotStartedException("");
+            throw new ApplicationContextNotStartedException();
         }
         if (!beans.containsKey(name)) {
-            throw new NoSuchBeanDefinitionException("");
+            throw new NoSuchBeanDefinitionException();
         }
         return beans.get(name);
     }
@@ -78,7 +75,7 @@ public class HardCodedSingletonApplicationContext extends AbstractApplicationCon
     @Override
     public boolean isPrototype(String name) {
         if (!beanDefinitions.containsKey(name)) {
-            throw new NoSuchBeanDefinitionException("");
+            throw new NoSuchBeanDefinitionException();
         }
         return false;
     }
@@ -86,7 +83,7 @@ public class HardCodedSingletonApplicationContext extends AbstractApplicationCon
     @Override
     public boolean isSingleton(String name) {
         if (!beanDefinitions.containsKey(name)) {
-            throw new NoSuchBeanDefinitionException("");
+            throw new NoSuchBeanDefinitionException();
         }
         return true;
     }

@@ -1,32 +1,24 @@
 package by.bsu.dependency.context;
 
-import by.bsu.dependency.example.*;
-import by.bsu.dependency.exception.ApplicationContextNotStartedException;
-import by.bsu.dependency.exception.NoSuchBeanDefinitionException;
+import by.bsu.dependency.beans.testBeans.FirstBean;
+import by.bsu.dependency.beans.testBeans.OtherBean;
+import by.bsu.dependency.beans.testBeans.PrototypeBean;
+import by.bsu.dependency.beans.testBeans.PrototypeHolderBean;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class AutoScanApplicationContextTest {
-
-    private ApplicationContext applicationContext;
-
+public class AutoScanApplicationContextTest extends SimpleApplicationContextTest {
     @BeforeEach
+    @Override
     void init() {
-        applicationContext = new AutoScanApplicationContext();
+        this.applicationContext = new AutoScanApplicationContext("by.bsu.dependency.beans.testBeans");
     }
 
     @Test
-    void testIsRunning() {
-        assertThat(applicationContext.isRunning()).isFalse();
-        applicationContext.start();
-        assertThat(applicationContext.isRunning()).isTrue();
-    }
-
-    @Test
+    @Override
     void testContextContainsBeans() {
         applicationContext.start();
 
@@ -39,50 +31,8 @@ public class AutoScanApplicationContextTest {
         assertThat(applicationContext.containsBean("randomBean")).isFalse();
     }
 
-
     @Test
-    void testContextContainsNotStarted() {
-        assertThrows(
-                ApplicationContextNotStartedException.class,
-                () -> applicationContext.containsBean("firstBean")
-        );
-    }
-
-    @Test
-    void testContextGetBeanNotStarted() {
-        assertThrows(
-                ApplicationContextNotStartedException.class,
-                () -> applicationContext.getBean("firstBean")
-        );
-    }
-
-    @Test
-    void testGetBeanThrows() {
-        applicationContext.start();
-
-        assertThrows(
-                NoSuchBeanDefinitionException.class,
-                () -> applicationContext.getBean("randomName")
-        );
-    }
-
-    @Test
-    void testIsSingletonThrows() {
-        assertThrows(
-                NoSuchBeanDefinitionException.class,
-                () -> applicationContext.isSingleton("randomName")
-        );
-    }
-
-    @Test
-    void testIsPrototypeThrows() {
-        assertThrows(
-                RuntimeException.class,
-                () -> applicationContext.isPrototype("randomName")
-        );
-    }
-
-    @Test
+    @Override
     void testGetBeanReturns() {
         applicationContext.start();
 
@@ -97,6 +47,7 @@ public class AutoScanApplicationContextTest {
     }
 
     @Test
+    @Override
     void testIsSingletonReturns() {
         assertThat(applicationContext.isSingleton("firstBean")).isTrue();
         assertThat(applicationContext.isSingleton("otherBean")).isTrue();
@@ -105,9 +56,8 @@ public class AutoScanApplicationContextTest {
         assertThat(applicationContext.isSingleton("prototypeHolderBean")).isFalse();
     }
 
-
-
     @Test
+    @Override
     void testIsPrototypeReturns() {
         assertThat(applicationContext.isPrototype("firstBean")).isFalse();
         assertThat(applicationContext.isPrototype("otherBean")).isFalse();
@@ -116,9 +66,9 @@ public class AutoScanApplicationContextTest {
     }
 
     @Test
+    @Override
     void testSingletonCorrectness() {
         applicationContext.start();
-
 
         Assertions.assertEquals(
                 applicationContext.getBean("firstBean"),
@@ -126,32 +76,5 @@ public class AutoScanApplicationContextTest {
         Assertions.assertEquals(
                 applicationContext.getBean("otherBean"),
                 applicationContext.getBean("otherBean"));
-    }
-
-    @Test
-    void testPrototypeCorrectness() {
-        applicationContext.start();
-
-        Assertions.assertNotEquals(
-                applicationContext.getBean("prototypeBean"),
-                applicationContext.getBean("prototypeBean"));
-        Assertions.assertNotEquals(
-                applicationContext.getBean("prototypeHolderBean"),
-                applicationContext.getBean("prototypeHolderBean"));
-
-        Assertions.assertNotEquals(
-                ((PrototypeHolderBean) applicationContext.getBean("prototypeHolderBean")).getPrototypeBean(),
-                ((PrototypeHolderBean) applicationContext.getBean("prototypeHolderBean")).getPrototypeBean());
-
-    }
-
-    @Test
-    void injectionCorrectness() {
-        applicationContext.start();
-
-        Assertions.assertNull(
-                ((PrototypeHolderBean) applicationContext.getBean("prototypeHolderBean")).getNullString());
-        Assertions.assertNotNull(
-                ((PrototypeHolderBean) applicationContext.getBean("prototypeHolderBean")).getEmptyString());
     }
 }
